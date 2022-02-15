@@ -1,0 +1,44 @@
+import UIKit
+import PhotosUI
+
+class PhotoViewController: UIViewController, PHPickerViewControllerDelegate {
+    
+
+    @IBOutlet weak var photoView: UIImageView!
+    
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        // Do any additional setup after loading the view.
+    }
+    
+    @IBAction func photoPresentation(_ sender: Any) {
+        var configuration = PHPickerConfiguration()
+        configuration.filter = .images
+        
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.delegate = self
+        
+        present(picker, animated:true)
+    }
+    
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        
+        dismiss(animated: true)
+        
+        if let itemProvider = results.first?.itemProvider, itemProvider.canLoadObject(ofClass: UIImage.self) {
+            let previousImage = photoView.image
+            itemProvider.loadObject(ofClass: UIImage.self){
+                [weak self] image , error in
+                DispatchQueue.main.async {
+                    guard let self = self, let image = image as? UIImage, self.photoView.image == previousImage else {
+                        return
+                    }
+                    self.photoView.image = image
+                    }
+                }
+            }
+        }
+        
+    }
