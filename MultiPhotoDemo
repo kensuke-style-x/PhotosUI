@@ -1,0 +1,66 @@
+import UIKit
+import PhotosUI
+
+class MultiPhotoViewController: UIViewController , PHPickerViewControllerDelegate{
+
+    @IBOutlet weak var multiPhotoView: UIImageView!
+    var itemProviders:[NSItemProvider] = []
+    
+    var iterator: IndexingIterator<[NSItemProvider]>?
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        // Do any additional setup after loading the view.
+    }
+    
+    
+    @IBAction func multiPhotoPresentation(_ sender: Any) {
+        var configuration = PHPickerConfiguration()
+        configuration.filter = .images
+        configuration.selectionLimit = 0
+        
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.delegate = self
+        
+        present(picker, animated: true)
+
+    }
+    
+    func displayNextImage(){
+        if let itemProvider = iterator?.next(),itemProvider.canLoadObject(ofClass: UIImage.self){
+            let previousImage = multiPhotoView.image
+            itemProvider.loadObject(ofClass: UIImage.self) {[weak self]image, error in
+                DispatchQueue.main.async {
+                    guard let self = self, let image = image as? UIImage, self.multiPhotoView.image == previousImage
+                    else {return}
+                    self.multiPhotoView.image = image
+                }
+            }
+        }
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        displayNextImage()
+    }
+    
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        dismiss(animated: true)
+        
+        itemProviders = results.map(\.itemProvider)
+        iterator = itemProviders.makeIterator()
+        displayNextImage()
+    }
+
+    
+    /*
+    // MARK: - Navigation
+
+    // In a storyboard-based application, you will often want to do a little preparation before navigation
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // Get the new view controller using segue.destination.
+        // Pass the selected object to the new view controller.
+    }
+    */
+
+}
